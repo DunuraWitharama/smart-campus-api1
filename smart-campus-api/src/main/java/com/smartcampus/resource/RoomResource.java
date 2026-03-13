@@ -17,10 +17,26 @@ public class RoomResource {
         return DataStore.rooms.values();
     }
     @POST
-    public Response createRoom(Room room) {
-    DataStore.rooms.put(room.getId(), room);
-    return Response.status(Response.Status.CREATED).entity(room).build();
+public Response createRoom(Room room) {
+
+    if (room.getId() == null || room.getName() == null) {
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity("Invalid room data")
+                .build();
     }
+
+    if (DataStore.rooms.containsKey(room.getId())) {
+        return Response.status(Response.Status.CONFLICT)
+                .entity("Room already exists")
+                .build();
+    }
+
+    DataStore.rooms.put(room.getId(), room);
+
+    return Response.status(Response.Status.CREATED)
+            .entity(room)
+            .build();
+}
     @GET
     @Path("/{id}")
     public Response getRoom(@PathParam("id") String id) {
