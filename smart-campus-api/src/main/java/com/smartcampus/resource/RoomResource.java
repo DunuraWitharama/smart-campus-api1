@@ -20,5 +20,19 @@ public class RoomResource {
     public Response createRoom(Room room) {
     DataStore.rooms.put(room.getId(), room);
     return Response.status(Response.Status.CREATED).entity(room).build();
-}
+    }
+    @GET
+    @Path("/{id}")
+    public Response getRoom(@PathParam("id") String id) {
+
+    Room room = DataStore.rooms.get(id);
+
+    if (room == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Room not found")
+                .build();
+    }
+
+    return Response.ok(room).build();
+    }
 }
