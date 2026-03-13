@@ -16,4 +16,9 @@ public class RoomResource {
     public Collection<Room> getRooms() {
         return DataStore.rooms.values();
     }
+    @POST
+    public Response createRoom(Room room) {
+    DataStore.rooms.put(room.getId(), room);
+    return Response.status(Response.Status.CREATED).entity(room).build();
+}
 }
