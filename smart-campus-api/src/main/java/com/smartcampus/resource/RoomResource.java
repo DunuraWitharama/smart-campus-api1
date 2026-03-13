@@ -35,4 +35,27 @@ public class RoomResource {
 
     return Response.ok(room).build();
     }
+    @DELETE
+@Path("/{id}")
+public Response deleteRoom(@PathParam("id") String id) {
+
+    Room room = DataStore.rooms.get(id);
+
+    if (room == null) {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Room not found")
+                .build();
+    }
+
+    // IMPORTANT RULE
+    if (!room.getSensorIds().isEmpty()) {
+        return Response.status(Response.Status.CONFLICT)
+                .entity("Cannot delete room with sensors")
+                .build();
+    }
+
+    DataStore.rooms.remove(id);
+
+    return Response.ok("Room deleted successfully").build();
+}
 }
