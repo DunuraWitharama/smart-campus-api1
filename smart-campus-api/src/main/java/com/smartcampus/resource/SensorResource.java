@@ -37,4 +37,21 @@ public Response createSensor(Sensor sensor) {
             .entity(sensor)
             .build();
 }
+    @GET
+public Collection<Sensor> getSensors(@QueryParam("type") String type) {
+
+    if (type == null) {
+        return DataStore.sensors.values();
+    }
+
+    List<Sensor> filtered = new ArrayList<>();
+
+    for (Sensor s : DataStore.sensors.values()) {
+        if (s.getType().equalsIgnoreCase(type)) {
+            filtered.add(s);
+        }
+    }
+
+    return filtered;
+}
 }
