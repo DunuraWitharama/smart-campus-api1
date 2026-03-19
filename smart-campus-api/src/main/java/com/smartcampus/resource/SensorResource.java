@@ -16,4 +16,21 @@ public class SensorResource {
     public Collection<Sensor> getSensors() {
         return DataStore.sensors.values();
     }
+
+    @POST
+public Response createSensor(Sensor sensor) {
+
+    // VALIDATION: room must exist
+    if (!DataStore.rooms.containsKey(sensor.getRoomId())) {
+        return Response.status(422)
+                .entity("Room not found")
+                .build();
+    }
+
+    DataStore.sensors.put(sensor.getId(), sensor);
+
+    return Response.status(Response.Status.CREATED)
+            .entity(sensor)
+            .build();
+}
 }
