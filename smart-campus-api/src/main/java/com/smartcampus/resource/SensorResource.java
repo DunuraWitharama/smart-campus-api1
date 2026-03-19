@@ -20,7 +20,6 @@ public class SensorResource {
     @POST
 public Response createSensor(Sensor sensor) {
 
-    // VALIDATION: room must exist
     if (!DataStore.rooms.containsKey(sensor.getRoomId())) {
         return Response.status(422)
                 .entity("Room not found")
@@ -28,6 +27,11 @@ public Response createSensor(Sensor sensor) {
     }
 
     DataStore.sensors.put(sensor.getId(), sensor);
+
+    // LINK sensor to room
+    DataStore.rooms.get(sensor.getRoomId())
+            .getSensorIds()
+            .add(sensor.getId());
 
     return Response.status(Response.Status.CREATED)
             .entity(sensor)
