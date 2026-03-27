@@ -2,7 +2,6 @@ package com.smartcampus.resource;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -10,7 +9,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import com.smartcampus.exception.SensorUnavailableException;
 import com.smartcampus.model.SensorReading;
 import com.smartcampus.repository.DataStore;
 
@@ -31,30 +29,24 @@ public class SensorReadingResource {
         return new SensorReadingResource(id);
 }
     @POST
-    public Response addReading(SensorReading reading) {
+public Response addReading(SensorReading reading) {
 
-    if (!DataStore.sensors.containsKey(sensorId)) {
-        return Response.status(404)
-        .entity(Map.of("error", "Sensor not found"))
-        .build();
-    }
-
-    // MAINTENANCE RULE
-    if ("MAINTENANCE".equalsIgnoreCase(
-            DataStore.sensors.get(sensorId).getStatus())) {
-
-        throw new SensorUnavailableException("Sensor is under maintenance");
+    if (sensorId == null || !DataStore.sensors.containsKey(sensorId)) {
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity("Sensor not found")
+                .build();
     }
 
     DataStore.readings
             .computeIfAbsent(sensorId, k -> new ArrayList<>())
             .add(reading);
 
+    // update sensor current value
     DataStore.sensors.get(sensorId)
             .setCurrentValue(reading.getValue());
 
     return Response.status(Response.Status.CREATED)
-        .entity(Map.of("message", "Reading added", "data", reading))
-        .build();
+            .entity(reading)
+            .build();
 }
 }
