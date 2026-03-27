@@ -19,4 +19,8 @@ public class SensorReadingResource {
     public List<SensorReading> getReadings() {
         return DataStore.readings.getOrDefault(sensorId, new ArrayList<>());
     }
+    @Path("/{id}/readings")
+    public SensorReadingResource getReadingResource(@PathParam("id") String id) {
+        return new SensorReadingResource(id);
+}
 }
