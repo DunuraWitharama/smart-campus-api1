@@ -30,11 +30,19 @@ public Response addReading(SensorReading reading) {
         return Response.status(404).entity("Sensor not found").build();
     }
 
+    // MAINTENANCE RULE
+    if ("MAINTENANCE".equalsIgnoreCase(
+            DataStore.sensors.get(sensorId).getStatus())) {
+
+        return Response.status(403)
+                .entity("Sensor is under maintenance")
+                .build();
+    }
+
     DataStore.readings
             .computeIfAbsent(sensorId, k -> new ArrayList<>())
             .add(reading);
 
-    // update sensor current value
     DataStore.sensors.get(sensorId)
             .setCurrentValue(reading.getValue());
 
