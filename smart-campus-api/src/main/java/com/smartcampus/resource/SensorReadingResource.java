@@ -1,5 +1,6 @@
 package com.smartcampus.resource;
 
+import com.smartcampus.exception.SensorUnavailableException;
 import com.smartcampus.model.SensorReading;
 import com.smartcampus.repository.DataStore;
 
@@ -34,9 +35,7 @@ public Response addReading(SensorReading reading) {
     if ("MAINTENANCE".equalsIgnoreCase(
             DataStore.sensors.get(sensorId).getStatus())) {
 
-        return Response.status(403)
-                .entity("Sensor is under maintenance")
-                .build();
+        throw new SensorUnavailableException("Sensor is under maintenance");
     }
 
     DataStore.readings

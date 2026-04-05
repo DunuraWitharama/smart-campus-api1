@@ -1,5 +1,6 @@
 package com.smartcampus.resource;
 
+import com.smartcampus.exception.LinkedResourceNotFoundException;
 import com.smartcampus.model.Sensor;
 import com.smartcampus.repository.DataStore;
 
@@ -21,9 +22,7 @@ public class SensorResource {
 public Response createSensor(Sensor sensor) {
 
     if (!DataStore.rooms.containsKey(sensor.getRoomId())) {
-        return Response.status(422)
-                .entity("Room not found")
-                .build();
+        throw new LinkedResourceNotFoundException("Room not found");
     }
 
     DataStore.sensors.put(sensor.getId(), sensor);
