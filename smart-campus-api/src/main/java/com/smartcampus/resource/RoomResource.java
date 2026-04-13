@@ -48,37 +48,37 @@ public Response createRoom(Room room) {
             .build();
 }
     @GET
-@Path("/{id}")
-public Response getRoom(@PathParam("id") String id) {
+    @Path("/{id}")
+    public Response getRoom(@PathParam("id") String id) {
 
-    Room room = DataStore.rooms.get(id);
+        Room room = DataStore.rooms.get(id);
 
-    if (room == null) {
-        return Response.status(Response.Status.NOT_FOUND)
-                .entity(Map.of("error", "Room not found"))
-                .build();
+        if (room == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "Room not found"))
+                    .build();
+        }
+
+        return Response.ok(Map.of("data", room)).build();
     }
+        @DELETE
+    @Path("/{id}")
+    public Response deleteRoom(@PathParam("id") String id) {
 
-    return Response.ok(Map.of("data", room)).build();
-}
-    @DELETE
-@Path("/{id}")
-public Response deleteRoom(@PathParam("id") String id) {
+        Room room = DataStore.rooms.get(id);
 
-    Room room = DataStore.rooms.get(id);
+        if (room == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "Room not found"))
+                    .build();
+        }
 
-    if (room == null) {
-        return Response.status(Response.Status.NOT_FOUND)
-                .entity(Map.of("error", "Room not found"))
-                .build();
+        if (!room.getSensorIds().isEmpty()) {
+            throw new RoomNotEmptyException("Cannot delete room with sensors");
+        }
+
+        DataStore.rooms.remove(id);
+
+        return Response.ok(Map.of("message", "Room deleted successfully")).build();
     }
-
-    if (!room.getSensorIds().isEmpty()) {
-        throw new RoomNotEmptyException("Cannot delete room with sensors");
-    }
-
-    DataStore.rooms.remove(id);
-
-    return Response.ok(Map.of("message", "Room deleted successfully")).build();
-}
 }

@@ -31,7 +31,7 @@ public class SensorReadingResource {
         return new SensorReadingResource(id);
 }
     @POST
-public Response addReading(SensorReading reading) {
+    public Response addReading(SensorReading reading) {
 
     if (!DataStore.sensors.containsKey(sensorId)) {
         return Response.status(404)
