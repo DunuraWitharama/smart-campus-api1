@@ -1,12 +1,18 @@
 package com.smartcampus.resource;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Response;
+
 import com.smartcampus.exception.SensorUnavailableException;
 import com.smartcampus.model.SensorReading;
 import com.smartcampus.repository.DataStore;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.util.*;
 
 public class SensorReadingResource {
 
@@ -28,7 +34,9 @@ public class SensorReadingResource {
 public Response addReading(SensorReading reading) {
 
     if (!DataStore.sensors.containsKey(sensorId)) {
-        return Response.status(404).entity("Sensor not found").build();
+        return Response.status(404)
+        .entity(Map.of("error", "Sensor not found"))
+        .build();
     }
 
     // MAINTENANCE RULE
@@ -46,7 +54,7 @@ public Response addReading(SensorReading reading) {
             .setCurrentValue(reading.getValue());
 
     return Response.status(Response.Status.CREATED)
-            .entity(reading)
-            .build();
+        .entity(Map.of("message", "Reading added", "data", reading))
+        .build();
 }
 }
