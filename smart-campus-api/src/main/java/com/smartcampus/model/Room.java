@@ -39,4 +39,7 @@ public class Room {
     public List<String> getSensorIds() {
         return sensorIds;
     }
+    public void setSensorIds(List<String> sensorIds) {
+    this.sensorIds = sensorIds;
+    }
 }
