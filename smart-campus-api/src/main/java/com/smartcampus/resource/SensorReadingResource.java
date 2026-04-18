@@ -5,8 +5,6 @@ import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
 import com.smartcampus.model.SensorReading;
@@ -24,29 +22,32 @@ public class SensorReadingResource {
     public List<SensorReading> getReadings() {
         return DataStore.readings.getOrDefault(sensorId, new ArrayList<>());
     }
-    @Path("/{id}/readings")
-    public SensorReadingResource getReadingResource(@PathParam("id") String id) {
-        return new SensorReadingResource(id);
-}
-    @POST
-public Response addReading(SensorReading reading) {
 
-    if (sensorId == null || !DataStore.sensors.containsKey(sensorId)) {
-        return Response.status(Response.Status.NOT_FOUND)
-                .entity("Sensor not found")
+    @POST
+    public Response addReading(SensorReading reading) {
+        System.out.println("DEBUG sensorId = " + sensorId);
+        System.out.println("DEBUG sensors map = " + DataStore.sensors.keySet());
+        System.out.println("DEBUG reading value = " + reading);
+
+       
+        if (sensorId == null || !DataStore.sensors.containsKey(sensorId)) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Sensor not found")
+                    .build();
+        }
+
+   
+        List<SensorReading> sensorReadings =
+                DataStore.readings.computeIfAbsent(sensorId, k -> new ArrayList<>());
+
+        sensorReadings.add(reading);
+
+      
+        DataStore.sensors.get(sensorId)
+                .setCurrentValue(reading.getValue());
+
+        return Response.status(Response.Status.CREATED)
+                .entity(reading)
                 .build();
     }
-
-    DataStore.readings
-            .computeIfAbsent(sensorId, k -> new ArrayList<>())
-            .add(reading);
-
-    // update sensor current value
-    DataStore.sensors.get(sensorId)
-            .setCurrentValue(reading.getValue());
-
-    return Response.status(Response.Status.CREATED)
-            .entity(reading)
-            .build();
-}
 }
