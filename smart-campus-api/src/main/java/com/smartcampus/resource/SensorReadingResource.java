@@ -2,6 +2,7 @@ package com.smartcampus.resource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -34,7 +35,7 @@ public class SensorReadingResource {
         // check sensor exists
         if (sensorId == null || !DataStore.sensors.containsKey(sensorId)) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Sensor not found")
+                    .entity(Map.of("error", "Sensor not found"))
                     .build();
         }
 
