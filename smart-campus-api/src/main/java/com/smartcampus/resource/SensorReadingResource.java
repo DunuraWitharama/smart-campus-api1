@@ -25,24 +25,21 @@ public class SensorReadingResource {
 
     @POST
     public Response addReading(SensorReading reading) {
+
         System.out.println("DEBUG sensorId = " + sensorId);
         System.out.println("DEBUG sensors map = " + DataStore.sensors.keySet());
-        System.out.println("DEBUG reading value = " + reading);
 
-       
         if (sensorId == null || !DataStore.sensors.containsKey(sensorId)) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity("Sensor not found")
                     .build();
         }
 
-   
         List<SensorReading> sensorReadings =
                 DataStore.readings.computeIfAbsent(sensorId, k -> new ArrayList<>());
 
         sensorReadings.add(reading);
 
-      
         DataStore.sensors.get(sensorId)
                 .setCurrentValue(reading.getValue());
 
