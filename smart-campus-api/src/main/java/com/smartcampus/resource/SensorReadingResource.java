@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.smartcampus.model.SensorReading;
@@ -24,6 +26,7 @@ public class SensorReadingResource {
     }
 
     @POST
+    @Produces(MediaType.APPLICATION_JSON) 
     public Response addReading(SensorReading reading) {
 
         // check sensor exists
