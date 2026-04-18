@@ -1,5 +1,6 @@
 package com.smartcampus.resource;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 
@@ -26,27 +27,30 @@ public class RoomResource {
     public Collection<Room> getRooms() {
         return DataStore.rooms.values();
     }
+
     @POST
-public Response createRoom(Room room) {
+    public Response createRoom(Room room) {
 
-    if (room.getId() == null || room.getName() == null) {
-        return Response.status(Response.Status.BAD_REQUEST)
-                .entity(Map.of("error", "Invalid room data"))
+        if (room.getId() == null || room.getName() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of("error", "Invalid room data"))
+                    .build();
+        }
+
+        if (DataStore.rooms.containsKey(room.getId())) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(Map.of("error", "Room already exists"))
+                    .build();
+        }
+
+        DataStore.rooms.put(room.getId(), room);
+
+        // 🔥 LOCATION HEADER ADDED
+        return Response.created(URI.create("/api/v1/rooms/" + room.getId()))
+                .entity(Map.of("data", room))
                 .build();
     }
 
-    if (DataStore.rooms.containsKey(room.getId())) {
-        return Response.status(Response.Status.CONFLICT)
-                .entity(Map.of("error", "Room already exists"))
-                .build();
-    }
-
-    DataStore.rooms.put(room.getId(), room);
-
-    return Response.status(Response.Status.CREATED)
-            .entity(Map.of("message", "Room created", "data", room))
-            .build();
-}
     @GET
     @Path("/{id}")
     public Response getRoom(@PathParam("id") String id) {
@@ -61,7 +65,8 @@ public Response createRoom(Room room) {
 
         return Response.ok(Map.of("data", room)).build();
     }
-        @DELETE
+
+    @DELETE
     @Path("/{id}")
     public Response deleteRoom(@PathParam("id") String id) {
 
