@@ -1,5 +1,6 @@
 com\smartcampus\exception\RoomNotEmptyException.class
 com\smartcampus\model\Sensor.class
+com\smartcampus\exception\RoomNotEmptyExceptionMapper.class
 com\smartcampus\repository\DataStore.class
 com\smartcampus\Main.class
 com\smartcampus\exception\SensorUnavailableException.class
