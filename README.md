@@ -9,10 +9,10 @@
 
 ## Project Introduction
 
-This project is a RESTful API developed using Java (JAX-RS with Jersey) to manage a Smart Campus environment.  
+This project is a RESTful API developed using Java (JAX-RS with Jersey) and an embedded Grizzly server to manage a Smart Campus environment.  
 It provides functionality to manage Rooms, Sensors, and Sensor Readings such as temperature and motion data.
 
-The system simulates an IoT-based campus where sensors are deployed in rooms and continuously generate data.
+The system simulates an IoT-based campus where sensors are deployed in rooms and continuously generate data. The API demonstrates key RESTful principles including resource modeling, validation, sub-resources, filtering, and robust error handling.
 
 ---
 
@@ -20,127 +20,20 @@ The system simulates an IoT-based campus where sensors are deployed in rooms and
 
 1. Open the project in VS Code or IntelliJ IDEA  
 2. Ensure Java (JDK 17) and Maven are installed  
-3. Run the following commands:
+
+Run:
 
 ```
 mvn clean install
 mvn exec:java
 ```
 
-4. Access the API at:  
+Access the API at:  
 http://localhost:8080/api/v1/
 
 ---
 
-## 2. Technical Analysis
-
-### 2.1 JAX-RS Lifecycle and Data Synchronization
-
-JAX-RS uses a request-scoped lifecycle, meaning a new resource instance is created for each request.  
-Because of this, resource classes cannot store persistent data.
-
-To solve this, a static `DataStore` is used with `ConcurrentHashMap`, ensuring:
-
-- Data persistence across requests  
-- Thread-safe operations for concurrent users  
-- Prevention of race conditions  
-
----
-
-### 2.2 Discovery Endpoint (HATEOAS)
-
-A root endpoint at `/api/v1/` is implemented using HATEOAS principles.
-
-Instead of relying on external documentation, the API provides dynamic links to available resources such as:
-
-- Rooms  
-- Sensors  
-
-This makes the API self-discoverable and flexible to future changes.
-
----
-
-### 2.3 Sensor Validation Logic
-
-The system ensures that a sensor cannot be created unless the specified room exists.
-
-Before creating a sensor:
-
-- The API validates the `roomId`  
-- If invalid, it returns **422 Unprocessable Entity**  
-
-This prevents invalid relationships and maintains data integrity.
-
----
-
-### 2.4 Sub-Resource Design
-
-Sensor readings are implemented as a sub-resource:
-
-```
-/sensors/{id}/readings
-```
-
-This design:
-
-- Maintains a clear parent-child relationship  
-- Improves API structure  
-- Reflects real-world IoT hierarchy  
-
-Additionally, each reading updates the sensor’s current value.
-
----
-
-### 2.5 Error Handling Strategy
-
-Custom exception handling is implemented using `ExceptionMapper`.
-
-The API returns structured JSON error responses:
-
-```
-{
-  "error": "message"
-}
-```
-
-Status codes used:
-
-- **404 Not Found** → Resource does not exist  
-- **409 Conflict** → Business rule violation (e.g., deleting a room with sensors)  
-- **422 Unprocessable Entity** → Invalid input data  
-- **403 Forbidden** → Sensor unavailable (e.g., maintenance state)  
-- **500 Internal Server Error** → Unexpected errors  
-
----
-
-### 2.6 Security Considerations
-
-A global exception handler is implemented to prevent exposure of internal system details.
-
-Instead of returning stack traces, the API returns a clean error message:
-
-```
-{
-  "error": "Something went wrong"
-}
-```
-
-This protects sensitive internal information and improves API security.
-
----
-
-### 2.7 Logging
-
-A logging filter is implemented to track:
-
-- Incoming requests  
-- Response status codes  
-
-This helps in debugging and monitoring API behavior.
-
----
-
-## 3. API Endpoints
+## 2. API Endpoints
 
 | Method | URL                           | Description                      |
 |--------|--------------------------------|----------------------------------|
@@ -157,18 +50,13 @@ This helps in debugging and monitoring API behavior.
 
 ---
 
-## 4. Sample Requests (cURL)
+## 3. Sample Requests
 
 ### Create Room
 ```
 curl -X POST http://localhost:8080/api/v1/rooms \
 -H "Content-Type: application/json" \
 -d "{\"id\":\"R1\",\"name\":\"Lab\",\"capacity\":30}"
-```
-
-### Get Rooms
-```
-curl http://localhost:8080/api/v1/rooms
 ```
 
 ### Create Sensor
@@ -178,16 +66,9 @@ curl -X POST http://localhost:8080/api/v1/sensors \
 -d "{\"id\":\"S1\",\"type\":\"temperature\",\"status\":\"ACTIVE\",\"roomId\":\"R1\"}"
 ```
 
-### Add Reading
-```
-curl -X POST http://localhost:8080/api/v1/sensors/S1/readings \
--H "Content-Type: application/json" \
--d "{\"id\":\"RD1\",\"timestamp\":123456,\"value\":25.5}"
-```
-
 ---
 
-## Technologies Used
+## 4. Technologies Used
 
 - Java  
 - JAX-RS (Jersey)  
@@ -196,17 +77,171 @@ curl -X POST http://localhost:8080/api/v1/sensors/S1/readings \
 
 ---
 
-## Features
+## 5. Features
 
-- Room management with validation  
-- Sensor management with relationship enforcement  
-- Sensor readings using sub-resource design  
-- Query parameter filtering  
-- Structured JSON error handling  
-- Global exception mapping  
-- Logging filter for request/response tracking  
+- Room management with validation and conflict handling  
+- Sensor management with referential integrity validation  
+- Sensor readings implemented using sub-resource pattern  
+- Query parameter filtering for efficient searching  
+- Structured JSON error handling with custom exception mappers  
+- Global exception handling for security  
+- Logging filter for request and response monitoring  
 - HATEOAS-based discovery endpoint  
-- Thread-safe in-memory data storage  
+- Thread-safe in-memory data storage using ConcurrentHashMap  
+
+---
+
+# 📄 6. CONCEPTUAL REPORT
+
+---
+
+## PART 1: SERVICE ARCHITECTURE & SETUP
+
+### 1.1 Project & Application Configuration
+
+**Question:**  
+Explain the default lifecycle of a JAX-RS Resource class and how it impacts data management.
+
+**Answer:**  
+In JAX-RS, resource classes follow a request-scoped lifecycle, meaning a new instance of each resource class is created for every incoming HTTP request. This ensures thread safety at the resource level since no instance is shared between requests.
+
+However, this also means resource classes cannot store persistent data because their state is destroyed after each request. To handle this, my implementation uses a centralized static `DataStore` class that stores all application data including rooms, sensors, and sensor readings.
+
+The DataStore uses `ConcurrentHashMap`, which ensures thread-safe access when multiple clients interact with the API simultaneously. This prevents race conditions, data corruption, and inconsistent application states.
+
+---
+
+### 1.2 Discovery Endpoint (HATEOAS)
+
+**Question:**  
+Why is Hypermedia (HATEOAS) important in REST APIs?
+
+**Answer:**  
+HATEOAS allows API responses to include links to related resources, enabling clients to dynamically discover available endpoints.
+
+In my implementation, the discovery endpoint (`/api/v1`) returns links to `/rooms` and `/sensors`. This removes the need for hardcoded URLs and allows the client to navigate the API dynamically.
+
+This improves flexibility, reduces dependency on external documentation, and makes the API self-descriptive and easier to maintain.
+
+---
+
+## PART 2: ROOM MANAGEMENT
+
+### 2.1 Room Resource Implementation
+
+**Question:**  
+What are the implications of returning only IDs vs full objects?
+
+**Answer:**  
+Returning only IDs reduces network bandwidth but requires additional API calls to fetch full details. This increases latency and complexity.
+
+In my implementation, full room objects are returned. This reduces the number of API calls required, simplifies client-side processing, and improves performance for small datasets.
+
+---
+
+### 2.2 Room Deletion & Safety Logic
+
+**Question:**  
+Is DELETE idempotent?
+
+**Answer:**  
+Yes, DELETE is idempotent. The first DELETE removes the resource, while subsequent DELETE requests return 404 without changing the system state.
+
+Additionally, I implemented validation to prevent deletion if a room contains sensors. This ensures data integrity by avoiding orphaned sensor records and returns a 409 Conflict response.
+
+---
+
+## PART 3: SENSOR OPERATIONS
+
+### 3.1 Media Type Handling
+
+**Question:**  
+What happens if a client sends data in the wrong format?
+
+**Answer:**  
+The API enforces JSON input using `@Consumes(MediaType.APPLICATION_JSON)`. If a client sends data in another format, JAX-RS automatically returns a 415 Unsupported Media Type response.
+
+This ensures strict validation, prevents incorrect data processing, and maintains consistency.
+
+---
+
+### 3.2 Filtering & Query Parameters
+
+**Question:**  
+Why use query parameters instead of path parameters?
+
+**Answer:**  
+Query parameters are designed for filtering collections and are optional. They allow flexible and scalable filtering.
+
+For example:
+```
+/api/v1/sensors?type=temperature
+```
+
+This approach follows REST principles, whereas path parameters are better suited for identifying specific resources.
+
+---
+
+## PART 4: SUB-RESOURCES
+
+### 4.1 Sub-Resource Locator Pattern
+
+**Question:**  
+What are the benefits?
+
+**Answer:**  
+The sub-resource locator pattern allows nested resources to be handled by separate classes.
+
+In my implementation, sensor readings are accessed via:
+```
+/sensors/{id}/readings
+```
+
+This design separates concerns, improves maintainability, reduces complexity, and allows better scalability of the API.
+
+---
+
+### 4.2 Historical Data Management
+
+Sensor readings are stored in a list associated with each sensor. When a new reading is added, it is appended to the history and also updates the sensor’s current value.
+
+This ensures both historical tracking and real-time accuracy.
+
+---
+
+## PART 5: ERROR HANDLING & LOGGING
+
+### 5.2 HTTP 422 vs 404
+
+**Question:**  
+Why use 422 instead of 404?
+
+**Answer:**  
+HTTP 422 is used when the request is valid but contains incorrect data. In my implementation, if a sensor references a non-existent room, the API returns 422 because the error is within the payload, not the endpoint itself.
+
+---
+
+### 5.4 Security & Global Exception Handling
+
+**Question:**  
+Why should stack traces not be exposed?
+
+**Answer:**  
+Stack traces expose internal system details such as class names and file paths. Attackers can use this information to identify vulnerabilities.
+
+To prevent this, I implemented a global exception mapper that returns a generic error response instead of exposing sensitive details.
+
+---
+
+### 5.5 Logging Filters
+
+**Question:**  
+Why use filters for logging?
+
+**Answer:**  
+Logging is implemented using JAX-RS filters to provide centralized logging of requests and responses.
+
+This avoids code duplication, improves maintainability, and ensures consistent logging across all endpoints.
 
 ---
 
